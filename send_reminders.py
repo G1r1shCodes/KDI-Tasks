@@ -9,6 +9,9 @@ Render Cron Job) to run daily.
 import os
 from twilio.rest import Client
 from sheet_utils import get_all_tasks, mark_reminder_sent
+from dotenv import load_dotenv
+
+load_dotenv()
 
 TWILIO_ACCOUNT_SID = os.environ["TWILIO_ACCOUNT_SID"]
 TWILIO_AUTH_TOKEN = os.environ["TWILIO_AUTH_TOKEN"]
