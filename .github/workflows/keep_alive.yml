@@ -13,4 +13,4 @@ jobs:
     steps:
       - name: Ping the webhook server
         # IMPORTANT: Replace the URL below with your actual Render URL
-        run: curl -s https://your-app.onrender.com/
+        run: curl -s https://kdi-tasks.onrender.com/
