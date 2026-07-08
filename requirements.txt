@@ -1,0 +1,6 @@
+fastapi
+uvicorn
+twilio
+gspread
+google-auth
+python-multipart

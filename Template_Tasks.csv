@@ -1,0 +1,3 @@
+Task ID,Date,Category,Task Description,Assigned To,Phone,Deadline,Priority,Status,Reminder Sent,Received On,Completed On,Time Taken
+T-1,2023-10-25,Operations,Prepare monthly report,John Doe,14155238886,2023-10-31,High,Pending,FALSE,,,
+T-2,2023-10-26,Marketing,Draft social media posts,Jane Smith,1234567890,2023-10-28,Medium,Pending,FALSE,,,
