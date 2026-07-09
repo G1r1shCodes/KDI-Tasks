@@ -1,5 +1,7 @@
 # WhatsApp task reminder + auto-update bot
 
+![Dashboard](assets/images/dashboard.png)
+
 ![Python](https://img.shields.io/badge/PYTHON-3.10+-blue?style=for-the-badge&logo=python&logoColor=white)
 ![FastAPI](https://img.shields.io/badge/FASTAPI-009688?style=for-the-badge&logo=fastapi&logoColor=white)
 ![Twilio](https://img.shields.io/badge/TWILIO-WHATSAPP-F22F46?style=for-the-badge&logo=twilio&logoColor=white)
@@ -8,7 +10,7 @@
 
 Sends task reminders on WhatsApp, listens for replies, and updates a
 Google Sheet (your Excel, but live and cloud-hosted) with status and
-completion time automatically.
+completion time automatically. Features a full operations dashboard for task creation and manual overrides.
 
 ## How it works
 1. `send_reminders.py` reads open tasks from the sheet and sends each
