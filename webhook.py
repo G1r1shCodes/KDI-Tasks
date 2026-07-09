@@ -57,7 +57,7 @@ def _handle_incoming(body: str, phone: str) -> str:
             "Couldn't find any open tasks for you in the sheet."
         )
 
-    if body in ("\u2705", "yes", "ok", "received"):
+    if body.lower() in ("\u2705", "yes", "ok", "received"):
         task_id = mark_received(phone=phone)
         return (
             f"Got it \u2014 noted you received {task_id}."
@@ -66,7 +66,7 @@ def _handle_incoming(body: str, phone: str) -> str:
         )
 
     return (
-        "Sorry, I didn't understand that. Reply \u2705 to confirm receipt, "
+        "Sorry, I didn't understand that. Reply \"ok\" to confirm receipt, "
         "or \"done\" when finished."
     )
 

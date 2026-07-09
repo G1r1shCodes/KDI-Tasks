@@ -28,7 +28,7 @@ def build_message(task):
         f"Category: {task.get('Category', '')}\n"
         f"Deadline: {task['Deadline']}\n"
         f"Priority: {task['Priority']}\n\n"
-        f"Reply \u2705 to confirm you received this.\n"
+        f"Reply \"ok\" to confirm you received this.\n"
         f"Reply \"done\" when finished."
     )
 
