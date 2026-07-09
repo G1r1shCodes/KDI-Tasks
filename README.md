@@ -13,7 +13,7 @@ completion time automatically.
 ## How it works
 1. `send_reminders.py` reads open tasks from the sheet and sends each
    employee a WhatsApp message (via Twilio).
-2. When they reply `✅` or `T-1 DONE`, Twilio forwards that reply to
+2. When they reply `ok` or `done`, Twilio forwards that reply to
    `webhook.py`, which is deployed on Render and always listening.
 3. The webhook updates the **Status**, **Received On**, and
    **Completed On** columns in the sheet — no manual work.
@@ -63,10 +63,7 @@ Copy `.env.example` to `.env` and fill in:
 5. Under **Environment**, add all the variables from your `.env`.
 6. Deploy. Render gives you a URL like `https://your-app.onrender.com`.
 
-   Note: Render's free tier sleeps after ~15 min of no traffic and takes
-   a few seconds to wake on the next request — fine for this use case
-   since a delayed reply confirmation is not critical. If you need
-   instant replies, upgrade to the $7/mo starter plan later.
+   Note: We have added a GitHub Action (`keep_alive.yml`) that automatically pings your Render URL every 10 minutes, so your free server will never go to sleep!
 
 ## Step 5 — Connect Twilio to your webhook
 1. In Twilio Console → **Messaging → WhatsApp Sandbox Settings**.
@@ -75,15 +72,19 @@ Copy `.env.example` to `.env` and fill in:
 3. Method: `HTTP POST`. Save.
 
 ## Step 6 — Send reminders
-Run locally (or schedule via Render Cron Job / GitHub Actions on a
-schedule):
-```
+We have set up a **GitHub Action** (`send_reminders.yml`) that automatically runs this script every 15 minutes. 
+To make it work, add your 5 `.env` variables into your GitHub Repository under **Settings → Secrets and variables → Actions**.
+
+To run it manually on your computer for testing:
+```bash
+pip install -r requirements.txt
 python send_reminders.py
 ```
+*(It will automatically read your local `.env` file!)*
 
 ## Testing it end-to-end
 1. Run `send_reminders.py` — you should get a WhatsApp message.
-2. Reply `✅` — check the sheet, "Received On" should fill in.
+2. Reply `ok` — check the sheet, "Received On" should fill in with the current Indian Standard Time (IST).
 3. Reply `done` — check the sheet, "Status" becomes `Done` and
    "Completed On" and "Time Taken" fill in.
 
