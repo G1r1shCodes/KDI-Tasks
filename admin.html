@@ -1,0 +1,533 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Operations | KDI Tasks</title>
+    
+    <!-- Typography: Inter for clean dashboard legibility -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    
+    <!-- Icons: Phosphor Icons via CDN -->
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+
+    <style>
+        :root {
+            /* Cold Tech Dark Mode Palette */
+            --bg-page: #09090b;       /* Zinc 950 */
+            --bg-surface: #18181b;    /* Zinc 900 */
+            --bg-surface-hover: #27272a;
+            
+            --border-base: #27272a;   /* Zinc 800 */
+            --border-focus: #3b82f6;  /* Blue 500 - Single Accent */
+            
+            --text-main: #fafafa;     /* Zinc 50 */
+            --text-muted: #a1a1aa;    /* Zinc 400 */
+            
+            --accent: #2563eb;        /* Blue 600 */
+            --accent-hover: #1d4ed8;  /* Blue 700 */
+            
+            --status-success: #10b981;
+            --status-error: #ef4444;
+
+            --radius: 8px;
+            --font-main: 'Inter', system-ui, sans-serif;
+            
+            --shadow-subtle: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: var(--font-main);
+            background-color: var(--bg-page);
+            color: var(--text-main);
+            line-height: 1.5;
+            -webkit-font-smoothing: antialiased;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* --- Layout --- */
+        .app-header {
+            border-bottom: 1px solid var(--border-base);
+            padding: 16px 32px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            background-color: var(--bg-page);
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+
+        .app-title {
+            font-size: 0.875rem;
+            font-weight: 500;
+            color: var(--text-muted);
+            letter-spacing: 0.02em;
+        }
+        
+        .app-title strong {
+            color: var(--text-main);
+            font-weight: 600;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 48px 32px;
+            width: 100%;
+            flex: 1;
+        }
+
+        .grid-layout {
+            display: grid;
+            grid-template-columns: minmax(0, 2fr) minmax(0, 1fr);
+            gap: 32px;
+            align-items: start;
+        }
+
+        @media (max-width: 1024px) {
+            .grid-layout {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* --- Surfaces & Components --- */
+        .section-header {
+            margin-bottom: 24px;
+        }
+
+        .section-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+
+        .section-desc {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .surface {
+            background-color: var(--bg-surface);
+            border: 1px solid var(--border-base);
+            border-radius: var(--radius);
+            padding: 32px;
+            box-shadow: var(--shadow-subtle);
+        }
+
+        /* --- Forms --- */
+        .form-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        .col-span-2 {
+            grid-column: span 2;
+        }
+
+        @media (max-width: 640px) {
+            .form-grid {
+                grid-template-columns: 1fr;
+            }
+            .col-span-2 {
+                grid-column: span 1;
+            }
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        label {
+            font-size: 0.8125rem;
+            font-weight: 500;
+            color: var(--text-muted);
+        }
+
+        input, select, textarea {
+            width: 100%;
+            background-color: var(--bg-page);
+            border: 1px solid var(--border-base);
+            color: var(--text-main);
+            font-family: var(--font-main);
+            font-size: 0.875rem;
+            padding: 10px 12px;
+            border-radius: 6px;
+            transition: all 0.2s ease;
+        }
+
+        input:focus, select:focus, textarea:focus {
+            outline: none;
+            border-color: var(--border-focus);
+            box-shadow: 0 0 0 1px var(--border-focus);
+        }
+        
+        input::placeholder, textarea::placeholder {
+            color: #52525b; /* Zinc 600 */
+        }
+
+        /* --- Buttons --- */
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            padding: 10px 16px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.15s ease;
+            border: 1px solid transparent;
+            width: 100%;
+        }
+
+        .btn:active {
+            transform: translateY(1px);
+        }
+
+        .btn:disabled {
+            opacity: 0.7;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .btn-primary {
+            background-color: var(--accent);
+            color: #fff;
+        }
+
+        .btn-primary:hover:not(:disabled) {
+            background-color: var(--accent-hover);
+        }
+
+        .btn-secondary {
+            background-color: transparent;
+            border-color: var(--border-base);
+            color: var(--text-main);
+        }
+
+        .btn-secondary:hover:not(:disabled) {
+            background-color: var(--bg-surface-hover);
+        }
+
+        /* Loading Spinner */
+        .spinner {
+            display: none;
+            width: 16px;
+            height: 16px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-top-color: currentColor;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+
+        .btn.loading .spinner { display: block; }
+        .btn.loading .icon { display: none; }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* --- System Status Card --- */
+        .status-list {
+            list-style: none;
+            margin-top: 24px;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+        
+        .status-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.875rem;
+            padding-bottom: 16px;
+            border-bottom: 1px solid var(--border-base);
+        }
+        
+        .status-item:last-child {
+            border-bottom: none;
+            padding-bottom: 0;
+        }
+
+        .status-label {
+            color: var(--text-muted);
+        }
+
+        .status-indicator {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            color: var(--status-success);
+            font-weight: 500;
+        }
+        
+        .dot {
+            width: 8px;
+            height: 8px;
+            background-color: currentColor;
+            border-radius: 50%;
+            box-shadow: 0 0 8px currentColor;
+        }
+
+        /* --- Toast Notifications --- */
+        #toast-container {
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            z-index: 50;
+        }
+
+        .toast {
+            background-color: var(--bg-surface);
+            border: 1px solid var(--border-base);
+            color: var(--text-main);
+            padding: 16px;
+            border-radius: var(--radius);
+            box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.5);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 0.875rem;
+            transform: translateX(120%);
+            transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+            max-width: 400px;
+        }
+
+        .toast.show {
+            transform: translateX(0);
+        }
+
+        .toast-icon {
+            font-size: 1.25rem;
+        }
+
+        .toast.success .toast-icon { color: var(--status-success); }
+        .toast.error .toast-icon { color: var(--status-error); }
+    </style>
+</head>
+<body>
+
+    <header class="app-header">
+        <i class="ph ph-kanban" style="font-size: 1.25rem; color: var(--text-main);"></i>
+        <div class="app-title"><strong>KDI Tasks</strong> / Operations</div>
+    </header>
+
+    <main class="container">
+        <div class="grid-layout">
+            
+            <!-- Primary Column: Create Task -->
+            <div class="col-main">
+                <div class="section-header">
+                    <h1 class="section-title">New Entry</h1>
+                    <p class="section-desc">Record a new task directly into the operational database.</p>
+                </div>
+                
+                <div class="surface">
+                    <form id="addTaskForm">
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label for="task_id">Task Identifier</label>
+                                <input type="text" id="task_id" name="task_id" placeholder="T-101" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="phone">Recipient Phone</label>
+                                <input type="text" id="phone" name="phone" placeholder="919876543210" required>
+                            </div>
+                            
+                            <div class="form-group col-span-2">
+                                <label for="description">Task Description</label>
+                                <textarea id="description" name="description" rows="2" placeholder="Operational details..." required></textarea>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="assigned_to">Assignee</label>
+                                <input type="text" id="assigned_to" name="assigned_to" placeholder="Operator Name">
+                            </div>
+                            <div class="form-group">
+                                <label for="deadline">Target Date</label>
+                                <input type="date" id="deadline" name="deadline">
+                            </div>
+
+                            <div class="form-group">
+                                <label for="category">Category</label>
+                                <input type="text" id="category" name="category" placeholder="Logistics">
+                            </div>
+                            <div class="form-group">
+                                <label for="priority">Priority Level</label>
+                                <select id="priority" name="priority">
+                                    <option value="Medium">Medium</option>
+                                    <option value="High">High</option>
+                                    <option value="Low">Low</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div style="margin-top: 32px;">
+                            <button type="submit" id="submitTaskBtn" class="btn btn-primary">
+                                <i class="ph ph-plus-circle icon"></i>
+                                <div class="spinner"></div>
+                                <span>Commit Entry</span>
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Secondary Column: System Actions -->
+            <div class="col-sidebar">
+                <div class="section-header">
+                    <h2 class="section-title">System Execution</h2>
+                    <p class="section-desc">Manual overrides and database status.</p>
+                </div>
+
+                <div class="surface" style="margin-bottom: 24px;">
+                    <div style="margin-bottom: 16px;">
+                        <h3 style="font-size: 0.875rem; font-weight: 500; margin-bottom: 4px;">Force Reminders</h3>
+                        <p style="font-size: 0.75rem; color: var(--text-muted);">Trigger the WhatsApp reminder routine immediately, bypassing the scheduled cron.</p>
+                    </div>
+                    <button type="button" id="triggerBtn" class="btn btn-secondary">
+                        <i class="ph ph-paper-plane-right icon"></i>
+                        <div class="spinner"></div>
+                        <span>Execute Now</span>
+                    </button>
+                </div>
+                
+                <div class="surface">
+                    <h3 style="font-size: 0.875rem; font-weight: 500; margin-bottom: 16px;">Services Status</h3>
+                    <ul class="status-list">
+                        <li class="status-item">
+                            <span class="status-label">API Gateway</span>
+                            <span class="status-indicator"><span class="dot"></span> Online</span>
+                        </li>
+                        <li class="status-item">
+                            <span class="status-label">Database Sync</span>
+                            <span class="status-indicator"><span class="dot"></span> Connected</span>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
+        </div>
+    </main>
+
+    <div id="toast-container"></div>
+
+    <script>
+        // --- Toast System ---
+        function showToast(message, type = 'success') {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+            
+            const iconClass = type === 'success' ? 'ph-check-circle' : 'ph-warning-circle';
+            
+            toast.innerHTML = `
+                <i class="ph ${iconClass} toast-icon"></i>
+                <span>${message}</span>
+            `;
+            
+            container.appendChild(toast);
+            
+            // Trigger animation
+            requestAnimationFrame(() => {
+                toast.classList.add('show');
+            });
+            
+            // Remove after 4 seconds
+            setTimeout(() => {
+                toast.classList.remove('show');
+                setTimeout(() => {
+                    toast.remove();
+                }, 300); // Wait for transition
+            }, 4000);
+        }
+
+        // --- Task Form Submit ---
+        document.getElementById('addTaskForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const form = this;
+            const btn = document.getElementById('submitTaskBtn');
+            const span = btn.querySelector('span');
+            
+            // Loading State
+            btn.disabled = true;
+            btn.classList.add('loading');
+            const originalText = span.textContent;
+            span.textContent = 'Committing...';
+
+            try {
+                const formData = new FormData(form);
+                const response = await fetch('/add-task', {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                const data = await response.json();
+
+                if (response.ok && data.status === 'success') {
+                    showToast(data.message, 'success');
+                    form.reset(); // Clear on success
+                } else {
+                    showToast(data.message || 'Failed to record entry.', 'error');
+                }
+            } catch (error) {
+                showToast('Network error. Unable to reach server.', 'error');
+            } finally {
+                // Restore State
+                btn.disabled = false;
+                btn.classList.remove('loading');
+                span.textContent = originalText;
+            }
+        });
+
+        // --- Trigger Reminders ---
+        document.getElementById('triggerBtn').addEventListener('click', async function() {
+            const btn = this;
+            const span = btn.querySelector('span');
+            
+            // Loading State
+            btn.disabled = true;
+            btn.classList.add('loading');
+            const originalText = span.textContent;
+            span.textContent = 'Executing...';
+
+            try {
+                const response = await fetch('/send-reminders');
+                const data = await response.json();
+
+                if (response.ok && data.status === 'success') {
+                    showToast('Reminders processed successfully.', 'success');
+                } else {
+                    showToast(data.message || 'Execution failed.', 'error');
+                }
+            } catch (error) {
+                showToast('Network error. Unable to execute.', 'error');
+            } finally {
+                // Restore State
+                btn.disabled = false;
+                btn.classList.remove('loading');
+                span.textContent = originalText;
+            }
+        });
+    </script>
+</body>
+</html>

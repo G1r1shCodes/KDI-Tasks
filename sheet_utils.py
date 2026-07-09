@@ -137,3 +137,24 @@ def mark_done(task_id=None, phone=None):
                 
         return True
     return False
+
+def add_task(task_data):
+    ws = get_worksheet()
+    now = datetime.datetime.now(datetime.timezone(datetime.timedelta(hours=5, minutes=30))).strftime("%Y-%m-%d")
+    
+    row_data = [
+        task_data.get("Task ID", ""),
+        now,
+        task_data.get("Category", ""),
+        task_data.get("Task Description", ""),
+        task_data.get("Assigned To", ""),
+        task_data.get("Phone", ""),
+        task_data.get("Deadline", ""),
+        task_data.get("Priority", "Medium"),
+        "Open",
+        "FALSE",
+        "",
+        "",
+        ""
+    ]
+    ws.append_row(row_data)

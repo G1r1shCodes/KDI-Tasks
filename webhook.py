@@ -71,6 +71,44 @@ def _handle_incoming(body: str, phone: str) -> str:
     )
 
 
-@app.get("/")
-async def health_check():
-    return {"status": "ok"}
+from fastapi.responses import HTMLResponse
+import pathlib
+
+@app.get("/", response_class=HTMLResponse)
+async def dashboard():
+    html_path = pathlib.Path("admin.html")
+    if html_path.exists():
+        return HTMLResponse(content=html_path.read_text())
+    return HTMLResponse(content="<h1>Admin Dashboard (admin.html missing)</h1>")
+
+@app.get("/send-reminders")
+async def trigger_reminders():
+    from send_reminders import send_reminders
+    try:
+        send_reminders()
+        return {"status": "success", "message": "Reminders sent successfully"}
+    except Exception as e:
+        return {"status": "error", "message": str(e)}
+
+@app.post("/add-task")
+async def api_add_task(request: Request):
+    form = await request.form()
+    task_data = {
+        "Task ID": form.get("task_id", "").strip(),
+        "Category": form.get("category", "").strip(),
+        "Task Description": form.get("description", "").strip(),
+        "Assigned To": form.get("assigned_to", "").strip(),
+        "Phone": form.get("phone", "").strip(),
+        "Deadline": form.get("deadline", "").strip(),
+        "Priority": form.get("priority", "Medium").strip()
+    }
+    
+    if not task_data["Task ID"] or not task_data["Task Description"] or not task_data["Phone"]:
+        return {"status": "error", "message": "Task ID, Description, and Phone are required."}
+    
+    try:
+        from sheet_utils import add_task
+        add_task(task_data)
+        return {"status": "success", "message": f"Task {task_data['Task ID']} added to sheet!"}
+    except Exception as e:
+        return {"status": "error", "message": str(e)}
