@@ -86,7 +86,7 @@ def mark_reminder_sent(task_id):
 
 def mark_received(task_id=None, phone=None):
     ws = get_worksheet()
-    now = datetime.datetime.now().strftime("%Y-%m-%d %H:%M")
+    now = datetime.datetime.now(datetime.timezone(datetime.timedelta(hours=5, minutes=30))).strftime("%Y-%m-%d %H:%M")
     if task_id:
         row = find_row_by_task_id(ws, task_id)
     else:
@@ -101,7 +101,7 @@ def mark_received(task_id=None, phone=None):
 
 def mark_done(task_id=None, phone=None):
     ws = get_worksheet()
-    now_dt = datetime.datetime.now()
+    now_dt = datetime.datetime.now(datetime.timezone(datetime.timedelta(hours=5, minutes=30)))
     now = now_dt.strftime("%Y-%m-%d %H:%M")
     
     if task_id:
