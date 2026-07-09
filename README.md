@@ -6,7 +6,7 @@
 ![Google Sheets](https://img.shields.io/badge/GOOGLE%20SHEETS-API-34A853?style=for-the-badge&logo=googlesheets&logoColor=white)
 ![Render](https://img.shields.io/badge/DEPLOYMENT-RENDER-000000?style=for-the-badge&logo=render&logoColor=white)
 
-![Dashboard](assets\images\Task DashBoard.png)
+![Dashboard](assets/images/Task%20DashBoard.png)
 
 Sends task reminders on WhatsApp, listens for replies, and updates a
 Google Sheet (your Excel, but live and cloud-hosted) with status and
