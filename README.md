@@ -38,7 +38,7 @@ completion time automatically.
 1. Create a new Google Sheet, rename the tab to `Tasks`.
 2. Row 1 headers (copy exactly):
    `Task ID | Date | Category | Task Description | Assigned To | Phone | Deadline | Priority | Status | Reminder Sent | Received On | Completed On | Time Taken`
-3. Fill in your tasks (Phone should be like `918595940062`, no `+`).
+3. Fill in your tasks (Phone should be like `1234567890`, no `+`).
 4. Go to **Google Cloud Console** → create a project → enable the
    **Google Sheets API** → create a **Service Account** → create a JSON
    key and download it.
