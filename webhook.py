@@ -76,10 +76,10 @@ import pathlib
 
 @app.get("/", response_class=HTMLResponse)
 async def dashboard():
-    html_path = pathlib.Path("admin.html")
+    html_path = pathlib.Path("templates/admin.html")
     if html_path.exists():
-        return HTMLResponse(content=html_path.read_text())
-    return HTMLResponse(content="<h1>Admin Dashboard (admin.html missing)</h1>")
+        return HTMLResponse(content=html_path.read_text(encoding="utf-8"))
+    return HTMLResponse(content="<h1>Admin Dashboard (templates/admin.html missing)</h1>")
 
 @app.get("/send-reminders")
 async def trigger_reminders():
