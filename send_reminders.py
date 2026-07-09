@@ -8,6 +8,7 @@ Render Cron Job) to run daily.
 
 import os
 from twilio.rest import Client
+from twilio.base.exceptions import TwilioRestException
 from sheet_utils import get_all_tasks, mark_reminder_sent
 from dotenv import load_dotenv
 
@@ -44,14 +45,17 @@ def send_reminders():
         to_number = f"whatsapp:+{phone}" if not phone.startswith("+") else f"whatsapp:{phone}"
         body = build_message(task)
 
-        client.messages.create(
-            from_=TWILIO_WHATSAPP_NUMBER,
-            to=to_number,
-            body=body,
-        )
-        mark_reminder_sent(task["Task ID"])
-        sent_count += 1
-        print(f"Sent {task['Task ID']} to {to_number}")
+        try:
+            client.messages.create(
+                from_=TWILIO_WHATSAPP_NUMBER,
+                to=to_number,
+                body=body,
+            )
+            mark_reminder_sent(task["Task ID"])
+            sent_count += 1
+            print(f"Sent {task['Task ID']} to {to_number}")
+        except TwilioRestException as e:
+            print(f"Failed to send to {to_number}. Error: {e.msg} (Make sure they have joined the Sandbox!)")
 
     print(f"Done. {sent_count} reminder(s) sent.")
 
