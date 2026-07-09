@@ -120,6 +120,8 @@ def mark_done(task_id=None, phone=None):
         if received_on:
             try:
                 received_dt = datetime.datetime.strptime(received_on, "%Y-%m-%d %H:%M")
+                # Make received_dt timezone-aware (IST) so we can subtract it from now_dt
+                received_dt = received_dt.replace(tzinfo=datetime.timezone(datetime.timedelta(hours=5, minutes=30)))
                 delta = now_dt - received_dt
                 
                 total_seconds = int(delta.total_seconds())
@@ -132,7 +134,7 @@ def mark_done(task_id=None, phone=None):
                     time_taken = f"{minutes}m"
                     
                 ws.update_cell(row, _col_index("Time Taken"), time_taken)
-            except ValueError:
+            except Exception:
                 pass
                 
         return True
