@@ -475,10 +475,10 @@
 
                             <div class="form-group" id="fg-assigned-to">
                                 <label for="assigned_to">Assignee</label>
-                                <select id="assigned_to" name="assigned_to">
-                                    <option value="">Select Assignee...</option>
+                                <input list="assignee_list" id="assigned_to" name="assigned_to" placeholder="Type or select name...">
+                                <datalist id="assignee_list">
                                     <!-- Populated dynamically from /team-members -->
-                                </select>
+                                </datalist>
                                 <span class="field-hint">Selecting an assignee auto-fills the phone number</span>
                             </div>
                             <div class="form-group" id="fg-deadline">
@@ -575,29 +575,29 @@
         }
 
         function populateAssigneeDropdown() {
-            const sel = document.getElementById('assigned_to');
-            // Keep the first "Select Assignee..." option
-            while (sel.options.length > 1) sel.remove(1);
+            const dataList = document.getElementById('assignee_list');
+            dataList.innerHTML = ''; // Clear existing
 
             teamMembers.forEach(m => {
                 const opt = document.createElement('option');
                 opt.value = m.name;
-                opt.textContent = m.name;
-                opt.dataset.phone = m.phone;
-                sel.appendChild(opt);
+                dataList.appendChild(opt);
             });
         }
 
         // =========================================================
         //  Auto-Pick Phone on Assignee Change
         // =========================================================
-        document.getElementById('assigned_to').addEventListener('change', function() {
-            const selected = this.options[this.selectedIndex];
+        document.getElementById('assigned_to').addEventListener('input', function() {
+            const val = this.value.trim();
             const phoneInput = document.getElementById('phone');
             const badge = document.getElementById('autoPickBadge');
 
-            if (selected && selected.dataset.phone) {
-                phoneInput.value = selected.dataset.phone;
+            // Check if typed/selected name matches a known team member
+            const member = teamMembers.find(m => m.name === val);
+
+            if (member && member.phone) {
+                phoneInput.value = member.phone;
                 badge.classList.add('visible');
                 // Clear any phone validation error
                 clearFieldError('fg-phone');
