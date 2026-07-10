@@ -400,27 +400,6 @@
         .toast.success .toast-icon { color: var(--status-success); }
         .toast.error .toast-icon { color: var(--status-error); }
 
-        /* --- Phone field with prefix badge --- */
-        .phone-input-wrapper {
-            position: relative;
-            display: flex;
-            align-items: center;
-        }
-
-        .phone-prefix {
-            position: absolute;
-            left: 12px;
-            font-size: 0.875rem;
-            color: var(--text-muted);
-            font-weight: 500;
-            pointer-events: none;
-            z-index: 1;
-        }
-
-        .phone-input-wrapper input {
-            padding-left: 36px;
-        }
-
         /* --- Assignee auto-pick indicator --- */
         .auto-pick-badge {
             display: none;
@@ -473,10 +452,7 @@
                             </div>
                             <div class="form-group" id="fg-phone">
                                 <label for="phone">Recipient Phone <span class="required-star">*</span></label>
-                                <div class="phone-input-wrapper">
-                                    <span class="phone-prefix">91</span>
-                                    <input type="text" id="phone" name="phone" placeholder="9876543210" required maxlength="12" inputmode="numeric">
-                                </div>
+                                <input type="text" id="phone" name="phone" placeholder="919876543210" required maxlength="12" inputmode="numeric">
                                 <span class="field-hint">12 digits: 91 + 10 digit number</span>
                                 <div class="auto-pick-badge" id="autoPickBadge">
                                     <i class="ph ph-check-circle"></i>
