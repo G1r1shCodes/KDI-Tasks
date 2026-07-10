@@ -450,6 +450,16 @@
                                     <span id="err-task-id">Task ID is required (e.g. T-101)</span>
                                 </div>
                             </div>
+                            
+                            <div class="form-group" id="fg-assigned-to">
+                                <label for="assigned_to">Assignee</label>
+                                <input list="assignee_list" id="assigned_to" name="assigned_to" placeholder="Type or select name...">
+                                <datalist id="assignee_list">
+                                    <!-- Populated dynamically from /team-members -->
+                                </datalist>
+                                <span class="field-hint">Selecting an assignee auto-fills the phone number</span>
+                            </div>
+
                             <div class="form-group" id="fg-phone">
                                 <label for="phone">Recipient Phone <span class="required-star">*</span></label>
                                 <input type="text" id="phone" name="phone" placeholder="919876543210" required maxlength="12" inputmode="numeric">
@@ -463,24 +473,7 @@
                                     <span id="err-phone">Phone must be 12 digits (91 + 10 digit number)</span>
                                 </div>
                             </div>
-                            
-                            <div class="form-group col-span-2" id="fg-description">
-                                <label for="description">Task Description <span class="required-star">*</span></label>
-                                <textarea id="description" name="description" rows="2" placeholder="Operational details..." required></textarea>
-                                <div class="field-error">
-                                    <i class="ph ph-warning-circle"></i>
-                                    <span id="err-description">Task description is required</span>
-                                </div>
-                            </div>
 
-                            <div class="form-group" id="fg-assigned-to">
-                                <label for="assigned_to">Assignee</label>
-                                <input list="assignee_list" id="assigned_to" name="assigned_to" placeholder="Type or select name...">
-                                <datalist id="assignee_list">
-                                    <!-- Populated dynamically from /team-members -->
-                                </datalist>
-                                <span class="field-hint">Selecting an assignee auto-fills the phone number</span>
-                            </div>
                             <div class="form-group" id="fg-deadline">
                                 <label for="deadline">Target Date</label>
                                 <input type="text" id="deadline" name="deadline" placeholder="Pick a date...">
@@ -490,10 +483,20 @@
                                 </div>
                             </div>
 
+                            <div class="form-group col-span-2" id="fg-description">
+                                <label for="description">Task Description <span class="required-star">*</span></label>
+                                <textarea id="description" name="description" rows="2" placeholder="Operational details..." required></textarea>
+                                <div class="field-error">
+                                    <i class="ph ph-warning-circle"></i>
+                                    <span id="err-description">Task description is required</span>
+                                </div>
+                            </div>
+
                             <div class="form-group" id="fg-category">
                                 <label for="category">Category</label>
                                 <input type="text" id="category" name="category" placeholder="Logistics">
                             </div>
+                            
                             <div class="form-group" id="fg-priority">
                                 <label for="priority">Priority Level</label>
                                 <select id="priority" name="priority">
