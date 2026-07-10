@@ -10,6 +10,10 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
     
+    <!-- Flatpickr: Modern Date Picker -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/themes/dark.css">
+    
     <!-- Icons: Phosphor Icons via CDN -->
     <script src="https://unpkg.com/@phosphor-icons/web"></script>
 
@@ -31,6 +35,7 @@
             
             --status-success: #10b981;
             --status-error: #ef4444;
+            --status-warn: #f59e0b;
 
             --radius: 8px;
             --font-main: 'Inter', system-ui, sans-serif;
@@ -155,6 +160,14 @@
             font-size: 0.8125rem;
             font-weight: 500;
             color: var(--text-muted);
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        label .required-star {
+            color: var(--status-error);
+            font-weight: 600;
         }
 
         input, select, textarea {
@@ -177,6 +190,70 @@
         
         input::placeholder, textarea::placeholder {
             color: #52525b; /* Zinc 600 */
+        }
+
+        /* Validation States */
+        .form-group.has-error input,
+        .form-group.has-error select,
+        .form-group.has-error textarea {
+            border-color: var(--status-error);
+            box-shadow: 0 0 0 1px var(--status-error);
+        }
+
+        .form-group.has-error label {
+            color: var(--status-error);
+        }
+
+        .field-error {
+            font-size: 0.75rem;
+            color: var(--status-error);
+            display: none;
+            align-items: center;
+            gap: 4px;
+            margin-top: 2px;
+            animation: shake 0.3s ease;
+        }
+
+        .form-group.has-error .field-error {
+            display: flex;
+        }
+
+        .field-hint {
+            font-size: 0.6875rem;
+            color: #52525b;
+            margin-top: 0px;
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-4px); }
+            75% { transform: translateX(4px); }
+        }
+
+        /* --- Flatpickr Overrides --- */
+        .flatpickr-calendar {
+            border: 1px solid var(--border-base) !important;
+            box-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.5) !important;
+            border-radius: 8px !important;
+        }
+
+        .flatpickr-calendar.dark .flatpickr-month,
+        .flatpickr-calendar.dark .flatpickr-weekdays,
+        .flatpickr-calendar.dark .flatpickr-weekday {
+            background: var(--bg-surface) !important;
+        }
+
+        .flatpickr-calendar.dark {
+            background: var(--bg-surface) !important;
+        }
+
+        .flatpickr-calendar.dark .flatpickr-day.selected {
+            background: var(--accent) !important;
+            border-color: var(--accent) !important;
+        }
+
+        .flatpickr-calendar.dark .flatpickr-day:hover {
+            background: var(--bg-surface-hover) !important;
         }
 
         /* --- Buttons --- */
@@ -322,6 +399,47 @@
 
         .toast.success .toast-icon { color: var(--status-success); }
         .toast.error .toast-icon { color: var(--status-error); }
+
+        /* --- Phone field with prefix badge --- */
+        .phone-input-wrapper {
+            position: relative;
+            display: flex;
+            align-items: center;
+        }
+
+        .phone-prefix {
+            position: absolute;
+            left: 12px;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            font-weight: 500;
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        .phone-input-wrapper input {
+            padding-left: 36px;
+        }
+
+        /* --- Assignee auto-pick indicator --- */
+        .auto-pick-badge {
+            display: none;
+            font-size: 0.6875rem;
+            color: var(--status-success);
+            align-items: center;
+            gap: 3px;
+            margin-top: 2px;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .auto-pick-badge.visible {
+            display: flex;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-4px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
     </style>
 </head>
 <body>
@@ -342,36 +460,65 @@
                 </div>
                 
                 <div class="surface">
-                    <form id="addTaskForm">
+                    <form id="addTaskForm" novalidate>
                         <div class="form-grid">
-                            <div class="form-group">
-                                <label for="task_id">Task Identifier</label>
+                            <div class="form-group" id="fg-task-id">
+                                <label for="task_id">Task Identifier <span class="required-star">*</span></label>
                                 <input type="text" id="task_id" name="task_id" placeholder="T-101" required>
+                                <span class="field-hint">Format: T-101, T-102, etc.</span>
+                                <div class="field-error">
+                                    <i class="ph ph-warning-circle"></i>
+                                    <span id="err-task-id">Task ID is required (e.g. T-101)</span>
+                                </div>
                             </div>
-                            <div class="form-group">
-                                <label for="phone">Recipient Phone</label>
-                                <input type="text" id="phone" name="phone" placeholder="919876543210" required>
+                            <div class="form-group" id="fg-phone">
+                                <label for="phone">Recipient Phone <span class="required-star">*</span></label>
+                                <div class="phone-input-wrapper">
+                                    <span class="phone-prefix">91</span>
+                                    <input type="text" id="phone" name="phone" placeholder="9876543210" required maxlength="12" inputmode="numeric">
+                                </div>
+                                <span class="field-hint">12 digits: 91 + 10 digit number</span>
+                                <div class="auto-pick-badge" id="autoPickBadge">
+                                    <i class="ph ph-check-circle"></i>
+                                    <span>Auto-filled from assignee</span>
+                                </div>
+                                <div class="field-error">
+                                    <i class="ph ph-warning-circle"></i>
+                                    <span id="err-phone">Phone must be 12 digits (91 + 10 digit number)</span>
+                                </div>
                             </div>
                             
-                            <div class="form-group col-span-2">
-                                <label for="description">Task Description</label>
+                            <div class="form-group col-span-2" id="fg-description">
+                                <label for="description">Task Description <span class="required-star">*</span></label>
                                 <textarea id="description" name="description" rows="2" placeholder="Operational details..." required></textarea>
+                                <div class="field-error">
+                                    <i class="ph ph-warning-circle"></i>
+                                    <span id="err-description">Task description is required</span>
+                                </div>
                             </div>
 
-                            <div class="form-group">
+                            <div class="form-group" id="fg-assigned-to">
                                 <label for="assigned_to">Assignee</label>
-                                <input type="text" id="assigned_to" name="assigned_to" placeholder="Operator Name">
+                                <select id="assigned_to" name="assigned_to">
+                                    <option value="">Select Assignee...</option>
+                                    <!-- Populated dynamically from /team-members -->
+                                </select>
+                                <span class="field-hint">Selecting an assignee auto-fills the phone number</span>
                             </div>
-                            <div class="form-group">
+                            <div class="form-group" id="fg-deadline">
                                 <label for="deadline">Target Date</label>
-                                <input type="date" id="deadline" name="deadline">
+                                <input type="text" id="deadline" name="deadline" placeholder="Pick a date...">
+                                <div class="field-error">
+                                    <i class="ph ph-warning-circle"></i>
+                                    <span id="err-deadline">Please select a valid date</span>
+                                </div>
                             </div>
 
-                            <div class="form-group">
+                            <div class="form-group" id="fg-category">
                                 <label for="category">Category</label>
                                 <input type="text" id="category" name="category" placeholder="Logistics">
                             </div>
-                            <div class="form-group">
+                            <div class="form-group" id="fg-priority">
                                 <label for="priority">Priority Level</label>
                                 <select id="priority" name="priority">
                                     <option value="Medium">Medium</option>
@@ -431,8 +578,176 @@
 
     <div id="toast-container"></div>
 
+    <!-- Flatpickr JS -->
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+
     <script>
-        // --- Toast System ---
+        // =========================================================
+        //  Team Members Cache (loaded once from /team-members)
+        // =========================================================
+        let teamMembers = [];  // [{name, phone}, ...]
+
+        async function loadTeamMembers() {
+            try {
+                const res = await fetch('/team-members');
+                const data = await res.json();
+                teamMembers = data.members || [];
+                populateAssigneeDropdown();
+            } catch (e) {
+                console.warn('Could not load team members:', e);
+            }
+        }
+
+        function populateAssigneeDropdown() {
+            const sel = document.getElementById('assigned_to');
+            // Keep the first "Select Assignee..." option
+            while (sel.options.length > 1) sel.remove(1);
+
+            teamMembers.forEach(m => {
+                const opt = document.createElement('option');
+                opt.value = m.name;
+                opt.textContent = m.name;
+                opt.dataset.phone = m.phone;
+                sel.appendChild(opt);
+            });
+        }
+
+        // =========================================================
+        //  Auto-Pick Phone on Assignee Change
+        // =========================================================
+        document.getElementById('assigned_to').addEventListener('change', function() {
+            const selected = this.options[this.selectedIndex];
+            const phoneInput = document.getElementById('phone');
+            const badge = document.getElementById('autoPickBadge');
+
+            if (selected && selected.dataset.phone) {
+                phoneInput.value = selected.dataset.phone;
+                badge.classList.add('visible');
+                // Clear any phone validation error
+                clearFieldError('fg-phone');
+            } else {
+                badge.classList.remove('visible');
+            }
+        });
+
+        // =========================================================
+        //  Flatpickr Date Picker Init
+        // =========================================================
+        flatpickr('#deadline', {
+            dateFormat: 'Y-m-d',
+            altInput: true,
+            altFormat: 'j M Y',    // e.g. "10 Jul 2026"
+            theme: 'dark',
+            minDate: 'today',
+            disableMobile: true,
+            animate: true,
+            monthSelectorType: 'dropdown',
+            onReady: function(selectedDates, dateStr, instance) {
+                // Style the alt input to match our design
+                if (instance.altInput) {
+                    instance.altInput.placeholder = 'Pick a date...';
+                }
+            }
+        });
+
+        // =========================================================
+        //  Validation Helpers
+        // =========================================================
+        function setFieldError(groupId, message) {
+            const group = document.getElementById(groupId);
+            group.classList.add('has-error');
+            if (message) {
+                const errSpan = group.querySelector('.field-error span');
+                if (errSpan) errSpan.textContent = message;
+            }
+        }
+
+        function clearFieldError(groupId) {
+            const group = document.getElementById(groupId);
+            group.classList.remove('has-error');
+        }
+
+        function clearAllErrors() {
+            document.querySelectorAll('.form-group.has-error').forEach(el => {
+                el.classList.remove('has-error');
+            });
+        }
+
+        // =========================================================
+        //  Phone Input — enforce digits only, auto-prepend 91
+        // =========================================================
+        const phoneInput = document.getElementById('phone');
+
+        phoneInput.addEventListener('input', function() {
+            // Strip non-digits
+            let v = this.value.replace(/\D/g, '');
+
+            // Auto-prepend 91 if user starts typing without it
+            if (v.length > 0 && !v.startsWith('91')) {
+                // If they typed a 10-digit number, prepend 91
+                if (v.length <= 10) {
+                    v = '91' + v;
+                }
+            }
+
+            // Cap at 12 digits
+            if (v.length > 12) v = v.slice(0, 12);
+
+            this.value = v;
+            // Clear error on edit
+            clearFieldError('fg-phone');
+        });
+
+        // =========================================================
+        //  Live validation — clear errors on edit
+        // =========================================================
+        document.getElementById('task_id').addEventListener('input', function() {
+            clearFieldError('fg-task-id');
+        });
+        document.getElementById('description').addEventListener('input', function() {
+            clearFieldError('fg-description');
+        });
+
+        // =========================================================
+        //  Form Validation
+        // =========================================================
+        function validateForm() {
+            let valid = true;
+            clearAllErrors();
+
+            // Task ID — required + format T-NNN
+            const taskId = document.getElementById('task_id').value.trim();
+            if (!taskId) {
+                setFieldError('fg-task-id', 'Task ID is required');
+                valid = false;
+            } else if (!/^T-\d+$/i.test(taskId)) {
+                setFieldError('fg-task-id', 'Must match format T-101, T-102, etc.');
+                valid = false;
+            }
+
+            // Description — required
+            const desc = document.getElementById('description').value.trim();
+            if (!desc) {
+                setFieldError('fg-description', 'Task description is required');
+                valid = false;
+            }
+
+            // Phone — required + exactly 12 digits starting with 91
+            const phone = document.getElementById('phone').value.trim();
+            if (!phone) {
+                setFieldError('fg-phone', 'Phone number is required');
+                valid = false;
+            } else if (!/^91\d{10}$/.test(phone)) {
+                setFieldError('fg-phone', 'Must be 12 digits: 91 followed by 10 digits');
+                valid = false;
+            }
+
+            return valid;
+        }
+
+        // =========================================================
+        //  Toast System
+        // =========================================================
         function showToast(message, type = 'success') {
             const container = document.getElementById('toast-container');
             const toast = document.createElement('div');
@@ -461,9 +776,18 @@
             }, 4000);
         }
 
-        // --- Task Form Submit ---
+        // =========================================================
+        //  Task Form Submit
+        // =========================================================
         document.getElementById('addTaskForm').addEventListener('submit', async function(e) {
             e.preventDefault();
+
+            // Client-side validation
+            if (!validateForm()) {
+                showToast('Please fix the highlighted errors.', 'error');
+                return;
+            }
+
             const form = this;
             const btn = document.getElementById('submitTaskBtn');
             const span = btn.querySelector('span');
@@ -486,6 +810,8 @@
                 if (response.ok && data.status === 'success') {
                     showToast(data.message, 'success');
                     form.reset(); // Clear on success
+                    document.getElementById('autoPickBadge').classList.remove('visible');
+                    clearAllErrors();
                 } else {
                     showToast(data.message || 'Failed to record entry.', 'error');
                 }
@@ -499,7 +825,9 @@
             }
         });
 
-        // --- Trigger Reminders ---
+        // =========================================================
+        //  Trigger Reminders
+        // =========================================================
         document.getElementById('triggerBtn').addEventListener('click', async function() {
             const btn = this;
             const span = btn.querySelector('span');
@@ -528,6 +856,11 @@
                 span.textContent = originalText;
             }
         });
+
+        // =========================================================
+        //  Init: Load team members on page load
+        // =========================================================
+        loadTeamMembers();
     </script>
 </body>
 </html>

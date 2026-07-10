@@ -10,11 +10,29 @@ Run locally with:
 """
 
 import re
+import os
 from fastapi import FastAPI, Request, Response
+from fastapi.responses import JSONResponse, HTMLResponse
 from twilio.twiml.messaging_response import MessagingResponse
 from sheet_utils import mark_received, mark_done
+from dotenv import load_dotenv
+
+load_dotenv()
 
 app = FastAPI()
+
+
+def _parse_team_members():
+    """Parse TEAM_MEMBERS env var.  Format: Name1:Phone1,Name2:Phone2
+    e.g. TEAM_MEMBERS=Rahul:919876543210,Priya:918765432109"""
+    raw = os.environ.get("TEAM_MEMBERS", "")
+    members = []
+    for entry in raw.split(","):
+        entry = entry.strip()
+        if ":" in entry:
+            name, phone = entry.split(":", 1)
+            members.append({"name": name.strip(), "phone": phone.strip()})
+    return members
 
 TASK_ID_PATTERN = re.compile(r"\bT-?(\d+)\b", re.IGNORECASE)
 
@@ -71,7 +89,6 @@ def _handle_incoming(body: str, phone: str) -> str:
     )
 
 
-from fastapi.responses import HTMLResponse
 import pathlib
 
 @app.get("/", response_class=HTMLResponse)
@@ -80,6 +97,13 @@ async def dashboard():
     if html_path.exists():
         return HTMLResponse(content=html_path.read_text(encoding="utf-8"))
     return HTMLResponse(content="<h1>Admin Dashboard (templates/admin.html missing)</h1>")
+
+
+@app.get("/team-members")
+async def team_members():
+    """Return the configured team members for the assignee dropdown."""
+    members = _parse_team_members()
+    return JSONResponse(content={"members": members})
 
 @app.get("/send-reminders")
 async def trigger_reminders():
@@ -102,10 +126,34 @@ async def api_add_task(request: Request):
         "Deadline": form.get("deadline", "").strip(),
         "Priority": form.get("priority", "Medium").strip()
     }
-    
-    if not task_data["Task ID"] or not task_data["Task Description"] or not task_data["Phone"]:
-        return {"status": "error", "message": "Task ID, Description, and Phone are required."}
-    
+
+    # --- Server-side validation ---
+    errors = []
+
+    # Required fields
+    if not task_data["Task ID"]:
+        errors.append("Task ID is required.")
+    elif not re.match(r"^T-\d+$", task_data["Task ID"], re.IGNORECASE):
+        errors.append("Task ID must be in format T-101, T-102, etc.")
+
+    if not task_data["Task Description"]:
+        errors.append("Task Description is required.")
+
+    if not task_data["Phone"]:
+        errors.append("Phone number is required.")
+    elif not re.match(r"^91\d{10}$", task_data["Phone"]):
+        errors.append("Phone must be 12 digits starting with 91 (e.g. 919876543210).")
+
+    if task_data["Priority"] not in ("Low", "Medium", "High"):
+        errors.append("Priority must be Low, Medium, or High.")
+
+    if task_data["Deadline"]:
+        if not re.match(r"^\d{4}-\d{2}-\d{2}$", task_data["Deadline"]):
+            errors.append("Deadline must be a valid date (YYYY-MM-DD).")
+
+    if errors:
+        return {"status": "error", "message": " | ".join(errors)}
+
     try:
         from sheet_utils import add_task
         add_task(task_data)
