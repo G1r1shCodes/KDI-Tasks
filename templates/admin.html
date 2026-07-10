@@ -346,16 +346,16 @@
                         <div class="form-grid">
                             <div class="form-group">
                                 <label for="task_id">Task Identifier</label>
-                                <input type="text" id="task_id" name="task_id" placeholder="T-101" required>
+                                <input type="text" id="task_id" name="task_id" placeholder="T-101" pattern="^T-?\\d+$" title="Use format T-101" required>
                             </div>
                             <div class="form-group">
                                 <label for="phone">Recipient Phone</label>
-                                <input type="text" id="phone" name="phone" placeholder="919876543210" required>
+                                <input type="text" id="phone" name="phone" placeholder="919876543210" pattern="^\\+?\\d{10,15}$" title="Use 10 to 15 digits (optional +)" required>
                             </div>
                             
                             <div class="form-group col-span-2">
                                 <label for="description">Task Description</label>
-                                <textarea id="description" name="description" rows="2" placeholder="Operational details..." required></textarea>
+                                <textarea id="description" name="description" rows="2" placeholder="Operational details..." maxlength="500" required></textarea>
                             </div>
 
                             <div class="form-group">
@@ -462,11 +462,54 @@
         }
 
         // --- Task Form Submit ---
+        function validateTaskForm(form) {
+            const taskIdInput = form.querySelector('#task_id');
+            const phoneInput = form.querySelector('#phone');
+            const descriptionInput = form.querySelector('#description');
+            const deadlineInput = form.querySelector('#deadline');
+
+            const taskId = taskIdInput.value.trim().toUpperCase();
+            const phone = phoneInput.value.trim();
+            const description = descriptionInput.value.trim();
+            const deadline = deadlineInput.value.trim();
+
+            if (!/^T-?\d+$/.test(taskId)) {
+                return 'Task ID must be in format T-123.';
+            }
+
+            if (!/^\+?\d{10,15}$/.test(phone)) {
+                return 'Phone must contain 10 to 15 digits (optional leading +).';
+            }
+
+            if (!description) {
+                return 'Task description is required.';
+            }
+
+            if (description.length > 500) {
+                return 'Task description must be 500 characters or less.';
+            }
+
+            if (deadline && Number.isNaN(Date.parse(deadline))) {
+                return 'Deadline must be a valid date.';
+            }
+
+            taskIdInput.value = taskId.replace(/^T-?/, 'T-');
+            phoneInput.value = phone.replace(/[^\d+]/g, '').replace(/^\+/, '');
+            descriptionInput.value = description;
+            return null;
+        }
+
         document.getElementById('addTaskForm').addEventListener('submit', async function(e) {
             e.preventDefault();
             const form = this;
             const btn = document.getElementById('submitTaskBtn');
             const span = btn.querySelector('span');
+
+            const validationError = validateTaskForm(form);
+            if (validationError) {
+                showToast(validationError, 'error');
+                return;
+            }
             
             // Loading State
             btn.disabled = true;

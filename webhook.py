@@ -9,6 +9,7 @@ Run locally with:
     uvicorn webhook:app --reload
 """
 
+import datetime
 import re
 from fastapi import FastAPI, Request, Response
 from twilio.twiml.messaging_response import MessagingResponse
@@ -17,6 +18,9 @@ from sheet_utils import mark_received, mark_done
 app = FastAPI()
 
 TASK_ID_PATTERN = re.compile(r"\bT-?(\d+)\b", re.IGNORECASE)
+TASK_ID_STRICT_PATTERN = re.compile(r"^T-?\d+$", re.IGNORECASE)
+PHONE_PATTERN = re.compile(r"^\d{10,15}$")
+ALLOWED_PRIORITIES = {"Low", "Medium", "High"}
 
 
 @app.post("/whatsapp-webhook")
@@ -93,18 +97,40 @@ async def trigger_reminders():
 @app.post("/add-task")
 async def api_add_task(request: Request):
     form = await request.form()
+    task_id_raw = form.get("task_id", "").strip()
+    phone_raw = form.get("phone", "").strip()
+    normalized_phone = re.sub(r"\D", "", phone_raw)
+
+    priority = form.get("priority", "Medium").strip().title()
+    if priority not in ALLOWED_PRIORITIES:
+        priority = "Medium"
+
     task_data = {
-        "Task ID": form.get("task_id", "").strip(),
+        "Task ID": task_id_raw.upper().replace(" ", ""),
         "Category": form.get("category", "").strip(),
         "Task Description": form.get("description", "").strip(),
         "Assigned To": form.get("assigned_to", "").strip(),
-        "Phone": form.get("phone", "").strip(),
+        "Phone": normalized_phone,
         "Deadline": form.get("deadline", "").strip(),
-        "Priority": form.get("priority", "Medium").strip()
+        "Priority": priority,
     }
     
     if not task_data["Task ID"] or not task_data["Task Description"] or not task_data["Phone"]:
         return {"status": "error", "message": "Task ID, Description, and Phone are required."}
+
+    if not TASK_ID_STRICT_PATTERN.fullmatch(task_data["Task ID"]):
+        return {"status": "error", "message": "Task ID must be in format T-123."}
+
+    task_data["Task ID"] = f"T-{task_data['Task ID'].replace('T-', '').replace('T', '')}"
+
+    if not PHONE_PATTERN.fullmatch(task_data["Phone"]):
+        return {"status": "error", "message": "Phone must contain 10 to 15 digits (optional leading +)."}
+
+    if task_data["Deadline"]:
+        try:
+            datetime.date.fromisoformat(task_data["Deadline"])
+        except ValueError:
+            return {"status": "error", "message": "Deadline must be a valid date in YYYY-MM-DD format."}
     
     try:
         from sheet_utils import add_task
