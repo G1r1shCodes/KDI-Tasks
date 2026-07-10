@@ -22,17 +22,18 @@ load_dotenv()
 app = FastAPI()
 
 
-def _parse_team_members():
-    """Parse TEAM_MEMBERS env var.  Format: Name1:Phone1,Name2:Phone2
-    e.g. TEAM_MEMBERS=Rahul:919876543210,Priya:918765432109"""
-    raw = os.environ.get("TEAM_MEMBERS", "")
-    members = []
-    for entry in raw.split(","):
-        entry = entry.strip()
-        if ":" in entry:
-            name, phone = entry.split(":", 1)
-            members.append({"name": name.strip(), "phone": phone.strip()})
-    return members
+def _get_team_members_from_sheet():
+    """Read unique (Assigned To, Phone) pairs from the Google Sheet.
+    No env config needed — the sheet IS the source of truth."""
+    from sheet_utils import get_all_tasks
+    tasks = get_all_tasks()
+    seen = {}
+    for t in tasks:
+        name = str(t.get("Assigned To", "")).strip()
+        phone = str(t.get("Phone", "")).strip()
+        if name and phone and name not in seen:
+            seen[name] = phone
+    return [{"name": n, "phone": p} for n, p in seen.items()]
 
 TASK_ID_PATTERN = re.compile(r"\bT-?(\d+)\b", re.IGNORECASE)
 
@@ -101,9 +102,12 @@ async def dashboard():
 
 @app.get("/team-members")
 async def team_members():
-    """Return the configured team members for the assignee dropdown."""
-    members = _parse_team_members()
-    return JSONResponse(content={"members": members})
+    """Return team members pulled from the Google Sheet (unique assignee-phone pairs)."""
+    try:
+        members = _get_team_members_from_sheet()
+        return JSONResponse(content={"members": members})
+    except Exception as e:
+        return JSONResponse(content={"members": [], "error": str(e)})
 
 @app.get("/send-reminders")
 async def trigger_reminders():
