@@ -84,8 +84,17 @@ async def whatsapp_webhook(request: Request):
                 if "messages" in value:
                     for msg in value["messages"]:
                         from_number = msg.get("from", "")
+                        body = ""
                         if msg.get("type") == "text":
                             body = msg.get("text", {}).get("body", "").strip()
+                        elif msg.get("type") == "button":
+                            # For template quick reply buttons
+                            body = msg.get("button", {}).get("text", "").strip()
+                        elif msg.get("type") == "interactive":
+                            # For interactive message buttons
+                            body = msg.get("interactive", {}).get("button_reply", {}).get("title", "").strip()
+
+                        if body:
                             reply_text = _handle_incoming(body, from_number)
                             if reply_text:
                                 _send_meta_reply(from_number, reply_text)
