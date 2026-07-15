@@ -49,12 +49,25 @@ def send_reminders():
         }
         payload = {
             "messaging_product": "whatsapp",
-            "recipient_type": "individual",
             "to": phone,
-            "type": "text",
-            "text": {
-                "preview_url": False,
-                "body": body
+            "type": "template",
+            "template": {
+                "name": "task_reminder",
+                "language": {
+                    "code": "en_US"
+                },
+                "components": [
+                    {
+                        "type": "body",
+                        "parameters": [
+                            {"type": "text", "text": str(task.get("Task ID", ""))},
+                            {"type": "text", "text": str(task.get("Task Description", ""))},
+                            {"type": "text", "text": str(task.get("Category", ""))},
+                            {"type": "text", "text": str(task.get("Deadline", ""))},
+                            {"type": "text", "text": str(task.get("Priority", ""))}
+                        ]
+                    }
+                ]
             }
         }
 
