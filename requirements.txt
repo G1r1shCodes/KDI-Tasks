@@ -1,6 +1,6 @@
 fastapi
 uvicorn
-twilio
+requests
 gspread
 google-auth
 python-multipart

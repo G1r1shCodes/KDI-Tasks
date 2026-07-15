@@ -7,18 +7,14 @@ Render Cron Job) to run daily.
 """
 
 import os
-from twilio.rest import Client
-from twilio.base.exceptions import TwilioRestException
+import requests
 from sheet_utils import get_all_tasks, mark_reminder_sent
 from dotenv import load_dotenv
 
 load_dotenv()
 
-TWILIO_ACCOUNT_SID = os.environ["TWILIO_ACCOUNT_SID"]
-TWILIO_AUTH_TOKEN = os.environ["TWILIO_AUTH_TOKEN"]
-TWILIO_WHATSAPP_NUMBER = os.environ["TWILIO_WHATSAPP_NUMBER"]  # e.g. "whatsapp:+14155238886"
-
-client = Client(TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN)
+WHATSAPP_ACCESS_TOKEN = os.environ.get("WHATSAPP_ACCESS_TOKEN")
+WHATSAPP_PHONE_NUMBER_ID = os.environ.get("WHATSAPP_PHONE_NUMBER_ID")
 
 
 def build_message(task):
@@ -42,20 +38,37 @@ def send_reminders():
         if already_sent or not phone:
             continue
 
-        to_number = f"whatsapp:+{phone}" if not phone.startswith("+") else f"whatsapp:{phone}"
+        # Ensure phone number is just digits
+        phone = "".join(filter(str.isdigit, str(phone)))
         body = build_message(task)
 
+        url = f"https://graph.facebook.com/v18.0/{WHATSAPP_PHONE_NUMBER_ID}/messages"
+        headers = {
+            "Authorization": f"Bearer {WHATSAPP_ACCESS_TOKEN}",
+            "Content-Type": "application/json"
+        }
+        payload = {
+            "messaging_product": "whatsapp",
+            "recipient_type": "individual",
+            "to": phone,
+            "type": "text",
+            "text": {
+                "preview_url": False,
+                "body": body
+            }
+        }
+
+        response = None
         try:
-            client.messages.create(
-                from_=TWILIO_WHATSAPP_NUMBER,
-                to=to_number,
-                body=body,
-            )
+            response = requests.post(url, headers=headers, json=payload)
+            response.raise_for_status()
             mark_reminder_sent(task["Task ID"])
             sent_count += 1
-            print(f"Sent {task['Task ID']} to {to_number}")
-        except TwilioRestException as e:
-            print(f"Failed to send to {to_number}. Error: {e.msg} (Make sure they have joined the Sandbox!)")
+            print(f"Sent {task['Task ID']} to {phone}")
+        except requests.exceptions.RequestException as e:
+            print(f"Failed to send to {phone}. Error: {e}")
+            if response is not None and response.content:
+                print(f"Response content: {response.text}")
 
     print(f"Done. {sent_count} reminder(s) sent.")
 

@@ -1,9 +1,9 @@
 """
-FastAPI webhook that Twilio calls every time an employee replies on
-WhatsApp. Deploy this on Render (or any always-on host) and point
-Twilio's "WHEN A MESSAGE COMES IN" webhook URL at:
+FastAPI webhook that Meta calls every time an employee replies on
+WhatsApp. Deploy this on Render (or any always-on host) and configure
+your WhatsApp Webhook URL in the Meta App Dashboard to point to:
 
-    https://<your-render-app>.onrender.com/whatsapp-webhook
+    https://kdi-tasks.onrender.com/whatsapp-webhook
 
 Run locally with:
     uvicorn webhook:app --reload
@@ -11,13 +11,17 @@ Run locally with:
 
 import re
 import os
+import requests
 from fastapi import FastAPI, Request, Response
 from fastapi.responses import JSONResponse, HTMLResponse
-from twilio.twiml.messaging_response import MessagingResponse
 from sheet_utils import mark_received, mark_done
 from dotenv import load_dotenv
 
 load_dotenv()
+
+WHATSAPP_ACCESS_TOKEN = os.environ.get("WHATSAPP_ACCESS_TOKEN")
+WHATSAPP_PHONE_NUMBER_ID = os.environ.get("WHATSAPP_PHONE_NUMBER_ID")
+WHATSAPP_VERIFY_TOKEN = os.environ.get("WHATSAPP_VERIFY_TOKEN")
 
 app = FastAPI()
 
@@ -38,17 +42,56 @@ def _get_team_members_from_sheet():
 TASK_ID_PATTERN = re.compile(r"\bT-?(\d+)\b", re.IGNORECASE)
 
 
+def _send_meta_reply(phone: str, text: str):
+    url = f"https://graph.facebook.com/v18.0/{WHATSAPP_PHONE_NUMBER_ID}/messages"
+    headers = {
+        "Authorization": f"Bearer {WHATSAPP_ACCESS_TOKEN}",
+        "Content-Type": "application/json"
+    }
+    payload = {
+        "messaging_product": "whatsapp",
+        "recipient_type": "individual",
+        "to": phone,
+        "type": "text",
+        "text": {
+            "preview_url": False,
+            "body": text
+        }
+    }
+    try:
+        requests.post(url, headers=headers, json=payload).raise_for_status()
+    except requests.exceptions.RequestException as e:
+        print(f"Failed to send reply to {phone}: {e}")
+
+@app.get("/whatsapp-webhook")
+async def verify_webhook(request: Request):
+    mode = request.query_params.get("hub.mode")
+    token = request.query_params.get("hub.verify_token")
+    challenge = request.query_params.get("hub.challenge")
+
+    if mode == "subscribe" and token == WHATSAPP_VERIFY_TOKEN:
+        return Response(content=challenge, media_type="text/plain")
+    return Response(content="Forbidden", status_code=403)
+
 @app.post("/whatsapp-webhook")
 async def whatsapp_webhook(request: Request):
-    form = await request.form()
-    from_number = form.get("From", "").replace("whatsapp:", "").replace("+", "").strip()
-    body = form.get("Body", "").strip()
+    data = await request.json()
+    
+    if data.get("object") == "whatsapp_business_account":
+        for entry in data.get("entry", []):
+            for change in entry.get("changes", []):
+                value = change.get("value", {})
+                if "messages" in value:
+                    for msg in value["messages"]:
+                        from_number = msg.get("from", "")
+                        if msg.get("type") == "text":
+                            body = msg.get("text", {}).get("body", "").strip()
+                            reply_text = _handle_incoming(body, from_number)
+                            if reply_text:
+                                _send_meta_reply(from_number, reply_text)
 
-    reply_text = _handle_incoming(body, from_number)
-
-    twiml = MessagingResponse()
-    twiml.message(reply_text)
-    return Response(content=str(twiml), media_type="application/xml")
+    # Always return 200 OK so Meta doesn't retry
+    return Response(content="OK", status_code=200)
 
 
 def _handle_incoming(body: str, phone: str) -> str:
