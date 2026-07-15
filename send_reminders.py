@@ -54,7 +54,7 @@ def send_reminders():
             "template": {
                 "name": "task_reminder",
                 "language": {
-                    "code": "en_US"
+                    "code": "en"
                 },
                 "components": [
                     {
