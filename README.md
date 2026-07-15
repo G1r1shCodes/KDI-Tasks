@@ -2,7 +2,7 @@
 
 ![Python](https://img.shields.io/badge/PYTHON-3.10+-blue?style=for-the-badge&logo=python&logoColor=white)
 ![FastAPI](https://img.shields.io/badge/FASTAPI-009688?style=for-the-badge&logo=fastapi&logoColor=white)
-![Twilio](https://img.shields.io/badge/TWILIO-WHATSAPP-F22F46?style=for-the-badge&logo=twilio&logoColor=white)
+![Meta](https://img.shields.io/badge/META-WHATSAPP-0668E1?style=for-the-badge&logo=meta&logoColor=white)
 ![Google Sheets](https://img.shields.io/badge/GOOGLE%20SHEETS-API-34A853?style=for-the-badge&logo=googlesheets&logoColor=white)
 ![Render](https://img.shields.io/badge/DEPLOYMENT-RENDER-000000?style=for-the-badge&logo=render&logoColor=white)
 
@@ -14,8 +14,8 @@ completion time automatically. Features a full operations dashboard for task cre
 
 ## How it works
 1. `send_reminders.py` reads open tasks from the sheet and sends each
-   employee a WhatsApp message (via Twilio).
-2. When they reply `ok` or `done`, Twilio forwards that reply to
+   employee a WhatsApp message (via the official WhatsApp Meta API).
+2. When they reply `ok` or `done`, Meta forwards that reply to
    `webhook.py`, which is deployed on Render and always listening.
 3. The webhook updates the **Status**, **Received On**, and
    **Completed On** columns in the sheet — no manual work.
@@ -24,23 +24,18 @@ completion time automatically. Features a full operations dashboard for task cre
 
 ---
 
-## Step 1 — Set up Twilio WhatsApp (free sandbox)
-1. Create a free account at twilio.com.
-2. In the Console, go to **Messaging → Try it out → Send a WhatsApp message**.
-3. It gives you a sandbox number (usually `+14155238886`) and a join
-   code like `join xxxx-xxxx`.
-4. Every employee must send that join code once to that number on
-   WhatsApp — this is a sandbox limitation. (For production without
-   this step, you'd apply for a permanent Twilio WhatsApp number later —
-   same code, just swap the number.)
-5. Copy your **Account SID** and **Auth Token** from the Twilio Console
-   dashboard — you'll need them for `.env`.
+## Step 1 — Set up WhatsApp Meta API
+1. Create a Meta Developer Account and create an App (type: Business).
+2. Add the **WhatsApp** product to your app.
+3. In the WhatsApp API Setup section, you will be given a test phone number and a temporary access token.
+4. (Recommended) Go to Meta Business Settings and create a System User to generate a **permanent access token**.
+5. Note down your **Access Token**, the **Phone Number ID**, and make up a custom password for your **Verify Token**. You'll need these for your `.env` file.
 
 ## Step 2 — Set up the Google Sheet
 1. Create a new Google Sheet, rename the tab to `Tasks`.
 2. Row 1 headers (copy exactly):
    `Task ID | Date | Category | Task Description | Assigned To | Phone | Deadline | Priority | Status | Reminder Sent | Received On | Completed On | Time Taken`
-3. Fill in your tasks (Phone should be like `1234567890`, no `+`).
+3. Fill in your tasks (Phone should be like `1234567890` or `919876543210`, no `+`).
 4. Go to **Google Cloud Console** → create a project → enable the
    **Google Sheets API** → create a **Service Account** → create a JSON
    key and download it.
@@ -53,7 +48,7 @@ completion time automatically. Features a full operations dashboard for task cre
 
 ## Step 3 — Configure environment variables
 Copy `.env.example` to `.env` and fill in:
-- `TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN`, `TWILIO_WHATSAPP_NUMBER`
+- `WHATSAPP_ACCESS_TOKEN`, `WHATSAPP_PHONE_NUMBER_ID`, `WHATSAPP_VERIFY_TOKEN`
 - `SHEET_ID`
 - `GOOGLE_CREDENTIALS_JSON` — paste the full JSON key content as one line
 
@@ -67,15 +62,16 @@ Copy `.env.example` to `.env` and fill in:
 
    Note: We have added a GitHub Action (`keep_alive.yml`) that automatically pings your Render URL every 10 minutes, so your free server will never go to sleep!
 
-## Step 5 — Connect Twilio to your webhook
-1. In Twilio Console → **Messaging → WhatsApp Sandbox Settings**.
-2. Set "WHEN A MESSAGE COMES IN" to:
-   `https://your-app.onrender.com/whatsapp-webhook`
-3. Method: `HTTP POST`. Save.
+## Step 5 — Connect Meta to your webhook
+1. In the Meta App Dashboard → **WhatsApp → Configuration**.
+2. Click **Edit** next to Webhook.
+3. Enter your live Render URL: `https://your-app.onrender.com/whatsapp-webhook`
+4. Enter your custom `WHATSAPP_VERIFY_TOKEN`. Click Verify and Save.
+5. Under Webhook fields, click **Manage** and subscribe to **messages**.
 
 ## Step 6 — Send reminders
 We have set up a **GitHub Action** (`send_reminders.yml`) that automatically runs this script every 15 minutes. 
-To make it work, add your 5 `.env` variables into your GitHub Repository under **Settings → Secrets and variables → Actions**.
+To make it work, add your `.env` variables into your GitHub Repository under **Settings → Secrets and variables → Actions**.
 
 To run it manually on your computer for testing:
 ```bash
@@ -91,8 +87,6 @@ python send_reminders.py
    "Completed On" and "Time Taken" fill in.
 
 ## Notes
+- **24-Hour Rule**: Meta strictly enforces a 24-hour service window. Outbound free-form reminders will only reach users who have messaged the bot within the last 24 hours. For long-term production use without this restriction, you must create and use **Message Templates** in your WhatsApp Manager.
 - Message format matches what you specified exactly — edit
   `build_message()` in `send_reminders.py` if you want to tweak wording.
-- To move off the Twilio sandbox for full production use later (no
-  join-code step for employees), apply for a Twilio WhatsApp Sender —
-  same code works, just update `TWILIO_WHATSAPP_NUMBER`.
